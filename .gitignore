@@ -1,0 +1,17 @@
+# Project data and local browser profiles
+profiles/
+profiles.json
+
+# Python cache / virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Editor / OS files
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
