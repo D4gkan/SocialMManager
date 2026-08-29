@@ -56,7 +56,10 @@ def load_profiles():
             }
             discovered = True
         else:
-            profiles[entry].setdefault("profile_path", profile_path)
+            old_path = profiles[entry].get("profile_path", "")
+            if old_path != profile_path:
+                profiles[entry]["profile_path"] = profile_path
+                discovered = True
             profiles[entry].setdefault(
                 "created",
                 datetime.fromtimestamp(os.path.getctime(profile_path)).isoformat(
