@@ -27,17 +27,51 @@ NAME_RE = re.compile(r"^[A-Za-z0-9]+$")
 # ---------- profiles.json ----------
 
 def load_profiles():
-    if not os.path.exists(PROFILES_FILE):
-        return {}
-    with open(PROFILES_FILE, "r", encoding="utf-8") as f:
-        try:
-            return json.load(f)
-        except json.JSONDecodeError:
-            print("profiles.json is corrupted or empty — starting fresh.")
-            return {}
+    profiles = {}
+    if os.path.exists(PROFILES_FILE):
+        with open(PROFILES_FILE, "r", encoding="utf-8") as f:
+            try:
+                loaded = json.load(f)
+                if isinstance(loaded, dict):
+                    profiles = loaded
+            except json.JSONDecodeError:
+                print("profiles.json is corrupted or empty — starting fresh.")
+                profiles = {}
+
+    if not os.path.isdir(PROFILES_DIR):
+        return profiles
+
+    discovered = False
+    for entry in sorted(os.listdir(PROFILES_DIR)):
+        profile_path = os.path.join(PROFILES_DIR, entry)
+        if not os.path.isdir(profile_path):
+            continue
+
+        if entry not in profiles:
+            profiles[entry] = {
+                "profile_path": profile_path,
+                "created": datetime.fromtimestamp(os.path.getctime(profile_path)).isoformat(
+                    timespec="seconds"
+                ),
+            }
+            discovered = True
+        else:
+            profiles[entry].setdefault("profile_path", profile_path)
+            profiles[entry].setdefault(
+                "created",
+                datetime.fromtimestamp(os.path.getctime(profile_path)).isoformat(
+                    timespec="seconds"
+                ),
+            )
+
+    if discovered:
+        save_profiles(profiles)
+
+    return profiles
 
 
 def save_profiles(profiles):
+    os.makedirs(os.path.dirname(PROFILES_FILE), exist_ok=True)
     with open(PROFILES_FILE, "w", encoding="utf-8") as f:
         json.dump(profiles, f, indent=2)
 

@@ -1,5 +1,9 @@
+import os
+import tempfile
 import unittest
+from unittest.mock import patch
 
+import utils
 from config import PLATFORMS
 
 
@@ -24,6 +28,23 @@ class PlatformConfigTests(unittest.TestCase):
         self.assertIn("x_com", PLATFORMS)
         self.assertEqual(PLATFORMS["x_com"]["url"], "https://x.com/")
         self.assertEqual(PLATFORMS["x_com"]["label"], "X")
+
+
+class ProfileDiscoveryTests(unittest.TestCase):
+    def test_load_profiles_recovers_existing_profile_dirs(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            profiles_dir = os.path.join(tempdir, "profiles")
+            profile_name = "Liora"
+            os.makedirs(os.path.join(profiles_dir, profile_name), exist_ok=True)
+            profiles_file = os.path.join(tempdir, "profiles.json")
+
+            with patch.object(utils, "PROFILES_DIR", profiles_dir), patch.object(
+                utils, "PROFILES_FILE", profiles_file
+            ):
+                profiles = utils.load_profiles()
+
+            self.assertIn(profile_name, profiles)
+            self.assertEqual(profiles[profile_name]["profile_path"], os.path.join(profiles_dir, profile_name))
 
 
 if __name__ == "__main__":
